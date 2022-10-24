@@ -1,24 +1,12 @@
 ## Usage of the Wildix STT application script example
 1. Copy stt_to base.py script to the PBX
 2. Add execution rights to the script
-3. Run `sqlite3` command and create example table:
-```
- CREATE TABLE stt_data (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    caller_id TEXT,
-    user_name TEXT,
-    user_place TEXT,
-    have_friend INTEGER,
-    friend_name TEXT,
-    friend_place TEXT,
-    audio_file TEXT,
-    error INTEGER
-);
-```
-4. Verify that sqlite database file has read and write permission for user wms
-5. Create dialplan user's contexts (example of it see on the screenshots)
-![extension 777](stt_context_1.png)
-![extension friend](stt_context_2.png)
+3. Prepare db (see an example of db connection and structure in stt_to_base.py script)
+4. Create dialplan contexts (example of it see on the screenshots)
+   ![extension +393123456789](stt_context_a.png)
+   ![extension ask_other](stt_context_b.png)
+   ![extension end_poll](stt_context_c.png)
+
 
 ### Description of example custom application string:
 - `/usr/local/sbin/stt_to_base.py` - path to the script file
@@ -27,25 +15,21 @@
 
 ###Dump of the dialplan example in the developer mode:
 ```
-{
-    "number": "7777",
+[
+  {
+    "number": "+393123456789",
     "apps": [
       {
-        "name": "Stt",
+        "name": "Set",
         "params": {
-          "question": "Hello, what is your name?",
-          "errorMessage": "",
-          "retries": "1",
-          "repeatQuestion": "",
-          "maxLength": "10",
-          "maxSilence": "3",
-          "saveAudio": "1"
+          "key": "RECOGNITION_LABEL",
+          "value": "caller_name"
         }
       },
       {
         "name": "Stt",
         "params": {
-          "question": "Where are you live?",
+          "question": "Prego, dica il suo nome",
           "errorMessage": "",
           "retries": "1",
           "repeatQuestion": "",
@@ -57,50 +41,91 @@
       {
         "name": "Set",
         "params": {
-          "key": "RECOGNITION_DICTIONARY",
-          "value": "Yes, No"
+          "key": "RECOGNITION_LABEL",
+          "value": "caller_surname"
         }
       },
       {
         "name": "Stt",
         "params": {
-          "question": "Do you have a best friend?",
+          "question": "Prego, dica il suo cognome",
           "errorMessage": "",
           "retries": "1",
           "repeatQuestion": "",
-          "maxLength": "5",
+          "maxLength": "10",
           "maxSilence": "3",
-          "saveAudio": ""
+          "saveAudio": "1"
         }
       },
       {
-        "name": "CustomApp",
+        "name": "Set",
         "params": {
-          "cwApp": "GotoIf($[ ${RECOGNITION_RESULT} == yes]?users,friend,1)"
+          "key": "RECOGNITION_LABEL",
+          "value": "caller_number"
         }
       },
       {
-        "name": "CustomApp",
+        "name": "Stt",
         "params": {
-          "cwApp": "Set(SttRes=${SHELL(/usr/local/sbin/stt_to_base.py ${CALLERID(num)} ${BASE64_ENCODE(${RECOGNITION_RESULTS})})})"
+          "question": "Prego, dica il numero di telefono a cui possiamo ricontattarla",
+          "errorMessage": "",
+          "retries": "1",
+          "repeatQuestion": "",
+          "maxLength": "10",
+          "maxSilence": "3",
+          "saveAudio": "1"
+        }
+      },
+      {
+        "name": "Set",
+        "params": {
+          "key": "RECOGNITION_LABEL",
+          "value": "looking_for_other"
+        }
+      },
+      {
+        "name": "Stt",
+        "params": {
+          "question": "Ha bisogno di aiuto per sé o per un’altra persona?",
+          "errorMessage": "",
+          "retries": "1",
+          "repeatQuestion": "",
+          "maxLength": "10",
+          "maxSilence": "3",
+          "saveAudio": "1"
+        }
+      },
+      {
+        "name": "GotoIf",
+        "params": {
+          "condition": "\"${RECOGNITION_RESULT}\"=\"yes\" | \"${RECOGNITION_RESULT}\"=\"si\"",
+          "number": "ask_other",
+          "dialplan": "main"
+        }
+      },
+      {
+        "name": "Goto",
+        "params": {
+          "number": "end_poll",
+          "dialplan": "main"
         }
       }
     ]
   },
   {
-    "number": "friend",
+    "number": "ask_other",
     "apps": [
       {
         "name": "Set",
         "params": {
           "key": "RECOGNITION_LABEL",
-          "value": "friend_name"
+          "value": "other_name"
         }
       },
       {
         "name": "Stt",
         "params": {
-          "question": "What is your friend name?",
+          "question": "Prego, dica il nome della persona cercata",
           "errorMessage": "",
           "retries": "1",
           "repeatQuestion": "",
@@ -113,13 +138,13 @@
         "name": "Set",
         "params": {
           "key": "RECOGNITION_LABEL",
-          "value": "friend_live"
+          "value": "other_surname"
         }
       },
       {
         "name": "Stt",
         "params": {
-          "question": "Where are your friend live?",
+          "question": "Prego, dica il cognome della persona cercata",
           "errorMessage": "",
           "retries": "1",
           "repeatQuestion": "",
@@ -129,11 +154,87 @@
         }
       },
       {
-        "name": "CustomApp",
+        "name": "Set",
         "params": {
-          "cwApp": "Set(SttRes=${SHELL(/usr/local/sbin/stt_to_base.py ${CALLERID(num)} ${BASE64_ENCODE(${RECOGNITION_RESULTS})})})"
+          "key": "RECOGNITION_LABEL",
+          "value": "other_number"
+        }
+      },
+      {
+        "name": "Stt",
+        "params": {
+          "question": "Prego, dica il numero di telefono della persona cercata",
+          "errorMessage": "",
+          "retries": "1",
+          "repeatQuestion": "",
+          "maxLength": "10",
+          "maxSilence": "3",
+          "saveAudio": "1"
+        }
+      },
+      {
+        "name": "Set",
+        "params": {
+          "key": "RECOGNITION_LABEL",
+          "value": "other_country"
+        }
+      },
+      {
+        "name": "Stt",
+        "params": {
+          "question": "Prego, dica la nazione di provenienza della persona cercata",
+          "errorMessage": "",
+          "retries": "1",
+          "repeatQuestion": "",
+          "maxLength": "10",
+          "maxSilence": "3",
+          "saveAudio": "1"
+        }
+      },
+      {
+        "name": "Stt",
+        "params": {
+          "question": "Prego, dica la città di provenienza della persona cercata",
+          "errorMessage": "",
+          "retries": "1",
+          "repeatQuestion": "",
+          "maxLength": "10",
+          "maxSilence": "3",
+          "saveAudio": "1"
+        }
+      },
+      {
+        "name": "Goto",
+        "params": {
+          "number": "end_poll",
+          "dialplan": "main"
+        }
+      }
+    ]
+  },
+  {
+    "number": "end_poll",
+    "apps": [
+      {
+        "name": "Stt",
+        "params": {
+          "question": "Se lo desidera, può lasciare un messaggio aggiuntivo",
+          "errorMessage": "",
+          "retries": "1",
+          "repeatQuestion": "",
+          "maxLength": "10",
+          "maxSilence": "3",
+          "saveAudio": "1"
+        }
+      },
+      {
+        "name": "Set",
+        "params": {
+          "key": "SttRes",
+          "value": "${SHELL(/usr/local/sbin/stt_to_base.py ${CALLERID(num)} ${BASE64_ENCODE(${RECOGNITION_RESULTS})})})"
         }
       }
     ]
   }
+]
 ```

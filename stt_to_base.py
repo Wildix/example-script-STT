@@ -15,43 +15,78 @@ import uuid
 CALLER_ID_NUMBER = sys.argv[1]
 
 # The second argument of the script is JSON data from dialplan tts application
-# Example for used dialpaln:
+# Example of results after stt dialplan's application
 #{
 #   "questions":[
 #      {
-#         "question":"Hello, what is your name?",
+#         "question":"Prego, dica il suo nome",
 #         "status":"SUCCESS",
 #         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105711-500-wildixbox-1665133023.5-1.wav",
 #         "result":"victor",
-#         "label":""
+#         "label":"caller_name"
 #      },
 #      {
-#         "question":"Where are you live?",
+#         "question":"Prego, dica il suo cognome",
 #         "status":"SUCCESS",
 #         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105720-500-wildixbox-1665133023.5-2.wav",
-#         "result":"new york",
-#         "label":""
+#         "result":"сonte",
+#         "label":"caller_surname"
 #      },
 #      {
-#         "question":"Do you have a best friend?",
+#         "question":"Prego, dica il numero di telefono a cui possiamo ricontattarla",
 #         "status":"SUCCESS",
-#         "audio_file":"",
+#         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105723-500-wildixbox-1665133023.5-3.wav",
+#         "result":"393123456789",
+#         "label":"caller_number"
+#      },
+#      {
+#         "question":"Ha bisogno di aiuto per sé o per un’altra persona?",
+#         "status":"SUCCESS",
+#         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105736-500-wildixbox-1665133023.5-4.wav",
 #         "result":"yes",
+#         "label":"looking_for_other"
+#      },
+#      {
+#         "question":"Prego, dica il nome della persona cercata",
+#         "status":"SUCCESS",
+#         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105744-500-wildixbox-1665133023.5-5.wav",
+#         "result":"mike",
+#         "label":"other_name"
+#      },
+#      {
+#         "question":"Prego, dica il cognome della persona cercata",
+#         "status":"SUCCESS",
+#         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105757-500-wildixbox-1665133023.5-6.wav",
+#         "result":"neri",
+#         "label":"other_surname"
+#      },
+#      {
+#         "question":"Prego, dica il numero di telefono della persona cercata",
+#         "status":"SUCCESS",
+#         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105778-500-wildixbox-1665133023.5-7.wav",
+#         "result":"380671234567",
+#         "label":"other_number"
+#      },
+#      {
+#         "question":"Prego, dica la nazione di provenienza della persona cercata",
+#         "status":"SUCCESS",
+#         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105781-500-wildixbox-1665133023.5-8.wav",
+#         "result":"ucraina",
+#         "label":"other_country"
+#      },
+#      {
+#         "question":"Prego, dica la città di provenienza della persona cercata",
+#         "status":"SUCCESS",
+#         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105793-500-wildixbox-1665133023.5-9.wav",
+#         "result":"odesa",
 #         "label":""
 #      },
 #      {
-#         "question":"What is your friend name?",
+#         "question":"Se lo desidera, può lasciare un messaggio aggiuntivo",
 #         "status":"SUCCESS",
-#         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105736-500-wildixbox-1665133023.5-4-friend_name.wav",
-#         "result":"peter",
-#         "label":"friend_name"
-#      },
-#      {
-#         "question":"Where are your friend live?",
-#         "status":"SUCCESS",
-#         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105744-500-wildixbox-1665133023.5-5-friend_live.wav",
-#         "result":"miami",
-#         "label":"friend_live"
+#         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105793-500-wildixbox-1665133023.5-10.wav",
+#         "result":"bisogno di consigli per ottenere un permesso di soggiorno",
+#         "label":""
 #      }
 #   ],
 #   "timestamp":"2022-10-07 10:57:11",
@@ -59,25 +94,39 @@ CALLER_ID_NUMBER = sys.argv[1]
 #}
 STT_DATA = json.loads(base64.b64decode(sys.argv[2]))
 
-# Example uses sqlite. Can be changed to any with python DB-API 2.0 (PEP 249)
+# Example uses mysql. Can be changed to any with python DB-API 2.0 (PEP 249)
 # Redefine for used db backend (additional Python libraries installed on the pbx required)
 def get_db_connection():
-    import sqlite3
-    return sqlite3.connect("/var/opt/sttdb")
+    import mysql.connector
+    return mysql.connector.connect(
+        host="localhost",
+        user="yourusername",
+        password="yourpassword",
+        database="dbname"
+    )
 
 # Name of the db table
 TABLE_NAME = "stt_data"
 # Example table create sql command
 # CREATE TABLE stt_data (
-#    id INTEGER PRIMARY KEY AUTOINCREMENT,
-#    caller_id TEXT,
-#    user_name TEXT,
-#    user_place TEXT,
-#    have_friend INTEGER,
-#    friend_name TEXT,
-#    friend_place TEXT,
+#    id INT AUTO_INCREMENT,
+#    unique_id TEXT NOT NULL,
+#    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+#    error INT,
 #    audio_file TEXT,
-#    error INTEGER
+#    caller_name TEXT,
+#    caller_surname TEXT,
+#    caller_number TEXT,
+#    real_caller_number TEXT,
+#    looking_for_other BOOLEAN NOT NULL DEFAULT FALSE,
+#    other_name TEXT,
+#    other_surname TEXT,
+#    other_number TEXT,
+#    other_country TEXT,
+#    other_city TEXT,
+#    notes TEXT,
+#    handled BOOLEAN NOT NULL DEFAULT FALSE,
+#    PRIMARY KEY (id)
 #);
 
 # tts application creates sound files, there are parameters related to sound files
@@ -85,23 +134,32 @@ TABLE_NAME = "stt_data"
 PROCESS_SOUNDS = True
 # Remove sources audio
 REMOVE_AUDIO_SOURCES = True
-# Output directory
+# Output directory. Setup path to your mounted storage
 SOUND_OUTPUT_DIR = "/tmp"
 
 # Recognition columns mapping related to json data. Labels and questions accepted
 # Recognision results from the tts application will be written to values columns names
+# The format: "lable name or question": "column name".
+# Need to exclude columns (labels/questsions) which additionally processed
+# like `ADD_COLUMN["looking_for_other"]` in this example below.
 # Please see example of the dialplan
 STT_COLUMNS = {
-    "Hello, what is your name?": "user_name",
-    "Where are you live?": "user_place",
-    "friend_name": "friend_name",
-    "friend_live": "friend_place"
+    "caller_name": "caller_name",
+    "caller_surname": "caller_surname",
+    "caller_number": "caller_number",
+    "other_name": "other_name",
+    "other_surname":"other_surname",
+    "other_number": "other_number",
+    "other_country": "other_country",
+    "Prego, dica la città di provenienza della persona cercata": "other_city",
+    "Se lo desidera, può lasciare un messaggio aggiuntivo": "notes"
 }
 
 # Additional columns which is not directly related to stt results
 ADD_COLUMN = {}
 
-ADD_COLUMN["caller_id"] = CALLER_ID_NUMBER
+ADD_COLUMN["real_caller_number"] = CALLER_ID_NUMBER
+ADD_COLUMN["unique_id"] = STT_DATA["linkedid"]
 
 # Create one audio file from all dialplan recognition results with save audio enabled
 # and write it to the destination directory with random name (added to separate db column)
@@ -128,16 +186,17 @@ def get_result(ident):
     return ""
 
 def get_error():
+    counter = 0
     for item in STT_DATA["questions"]:
         if item["status"] != "SUCCESS":
-            return 1
-    return 0
+            counter += 1
+    return counter
 
-# Calculate error column
+# Calculate error column(s)
 ADD_COLUMN["error"] = get_error()
 
 # Process result of dialplan choice, please see example dialplan
-ADD_COLUMN["have_friend"] = 1 if "yes" in get_result("Do you have a best friend?") else 0
+ADD_COLUMN["looking_for_other"] = True if "yes" in get_result("looking_for_other") else False
 
 def create_query():
     columns = []
@@ -155,7 +214,7 @@ def create_query():
     values.extend(list(ADD_COLUMN.values()))
 
     columns_list = ",".join(columns)
-    values_template = ",".join(["?"] * len(values))
+    values_template = ",".join(["%s"] * len(values))
 
     query = "INSERT INTO %s (%s) VALUES (%s)" % (TABLE_NAME, columns_list, values_template)
     return (query, values)
