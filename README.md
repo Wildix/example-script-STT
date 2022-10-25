@@ -1,8 +1,14 @@
 ## Usage of the Wildix STT application script example
 1. Copy stt_to base.py script to the PBX
 2. Add execution rights to the script
-3. Prepare db (see an example of db connection and structure in stt_to_base.py script)
-4. Create dialplan contexts (example of it see on the screenshots)
+3. Need to install library mysql.connector
+```
+# apt-get update
+# apt-get install python3-pip
+# pip3 install mysql.connector
+```
+4. Prepare db (see an example of db connection and structure in stt_to_base.py script)
+5. Create dialplan contexts (example of it see on the screenshots)
    ![extension +393123456789](stt_context_a.png)
    ![extension ask_other](stt_context_b.png)
    ![extension end_poll](stt_context_c.png)
@@ -13,7 +19,7 @@
 - `${CALLERID(num)}` - first argument, caller number
 - `${RECOGNITION_RESULTS}` - second argument, results of TTS application recognition in json
 
-###Dump of the dialplan example in the developer mode:
+### Dump of the dialplan example in the developer mode:
 ```
 [
   {
