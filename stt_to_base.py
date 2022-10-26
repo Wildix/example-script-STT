@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# Example script for wildix stt dialplan application
+# Example of a script for Wildix STT dialplan application
 # Set(SttRes=${SHELL(/usr/local/sbin/stt_to_base.py ${CALLERID(num)} ${BASE64_ENCODE(${RECOGNITION_RESULTS})})})
 
 import base64
@@ -10,79 +10,79 @@ import sys
 import uuid
 
 
-# The first argument of the script is caller number from dialplan custom application
-# Please see README file and dialplan example
+# The first argument of the script is caller number from Dialplan custom application
+# Please see README file and Dialplan example
 CALLER_ID_NUMBER = sys.argv[1]
 
-# The second argument of the script is JSON data from dialplan tts application
-# Example of results after stt dialplan's application
+# The second argument of the script is JSON data from Dialplan STT application
+# Example of results after STT Dialplan's application execution
 #{
 #   "questions":[
 #      {
-#         "question":"Prego, dica il suo nome",
+#         "question":"What is your name?",
 #         "status":"SUCCESS",
 #         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105711-500-wildixbox-1665133023.5-1.wav",
 #         "result":"victor",
 #         "label":"caller_name"
 #      },
 #      {
-#         "question":"Prego, dica il suo cognome",
+#         "question":"What is your surname?",
 #         "status":"SUCCESS",
 #         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105720-500-wildixbox-1665133023.5-2.wav",
 #         "result":"сonte",
 #         "label":"caller_surname"
 #      },
 #      {
-#         "question":"Prego, dica il numero di telefono a cui possiamo ricontattarla",
+#         "question":"What is your contact number?",
 #         "status":"SUCCESS",
 #         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105723-500-wildixbox-1665133023.5-3.wav",
 #         "result":"393123456789",
 #         "label":"caller_number"
 #      },
 #      {
-#         "question":"Ha bisogno di aiuto per sé o per un’altra persona?",
+#         "question":"Do you need help for yourself, or for another person?",
 #         "status":"SUCCESS",
 #         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105736-500-wildixbox-1665133023.5-4.wav",
 #         "result":"yes",
 #         "label":"looking_for_other"
 #      },
 #      {
-#         "question":"Prego, dica il nome della persona cercata",
+#         "question":"Please, give the name of the person",
 #         "status":"SUCCESS",
 #         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105744-500-wildixbox-1665133023.5-5.wav",
 #         "result":"mike",
 #         "label":"other_name"
 #      },
 #      {
-#         "question":"Prego, dica il cognome della persona cercata",
+#         "question":"Please, give the surname of the person",
 #         "status":"SUCCESS",
 #         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105757-500-wildixbox-1665133023.5-6.wav",
 #         "result":"neri",
 #         "label":"other_surname"
 #      },
 #      {
-#         "question":"Prego, dica il numero di telefono della persona cercata",
+#         "question":"Please, give the phone number of the person",
 #         "status":"SUCCESS",
 #         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105778-500-wildixbox-1665133023.5-7.wav",
 #         "result":"380671234567",
 #         "label":"other_number"
 #      },
 #      {
-#         "question":"Prego, dica la nazione di provenienza della persona cercata",
+#         "question":"Please, name the country of origin of the person",
 #         "status":"SUCCESS",
 #         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105781-500-wildixbox-1665133023.5-8.wav",
 #         "result":"ucraina",
 #         "label":"other_country"
 #      },
 #      {
-#         "question":"Prego, dica la città di provenienza della persona cercata",
+#         "question":"Please, name the city of origin of the person",
 #         "status":"SUCCESS",
 #         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105793-500-wildixbox-1665133023.5-9.wav",
 #         "result":"odesa",
 #         "label":""
 #      },
 #      {
-#         "question":"Se lo desidera, può lasciare un messaggio aggiuntivo",
+#         "question":"If you wish, you can leave an additional message",
 #         "status":"SUCCESS",
 #         "audio_file":"/dev/shm/var/spool/callweaver/monitor/stt/20221007-105793-500-wildixbox-1665133023.5-10.wav",
 #         "result":"bisogno di consigli per ottenere un permesso di soggiorno",
@@ -94,8 +94,8 @@ CALLER_ID_NUMBER = sys.argv[1]
 #}
 STT_DATA = json.loads(base64.b64decode(sys.argv[2]))
 
-# Example uses mysql. Can be changed to any with python DB-API 2.0 (PEP 249)
-# Redefine for used db backend (additional Python libraries installed on the pbx required)
+# In the example, mySQL is used. It can be changed to any other option with python DB-API 2.0 (PEP 249)
+# Redefine for used db backend (additional Python libraries are required to be installed on the PBX )
 def get_db_connection():
     import mysql.connector
     return mysql.connector.connect(
@@ -129,20 +129,20 @@ TABLE_NAME = "stt_data"
 #    PRIMARY KEY (id)
 #);
 
-# tts application creates sound files, there are parameters related to sound files
+# STT application creates sound files. There are parameters related to sound files
 # Use sounds
 PROCESS_SOUNDS = True
 # Remove sources audio
 REMOVE_AUDIO_SOURCES = True
-# Output directory. Setup path to your mounted storage
+# Output directory. Set up path to your mounted storage
 SOUND_OUTPUT_DIR = "/tmp"
 
-# Recognition columns mapping related to json data. Labels and questions accepted
-# Recognision results from the tts application will be written to values columns names
-# The format: "lable name or question": "column name".
-# Need to exclude columns (labels/questsions) which additionally processed
-# like `ADD_COLUMN["looking_for_other"]` in this example below.
-# Please see example of the dialplan
+# Recognition columns mapping related to JSON data. Labels and questions accepted.
+# Recognition results from the STT application are written to values columns names
+# The format: "label name or question": "column name".
+# Need to exclude columns (labels/questions) which additionally processed
+# like `ADD_COLUMN["looking_for_other"]` in the example below.
+# Please see example of the Dialplan
 STT_COLUMNS = {
     "caller_name": "caller_name",
     "caller_surname": "caller_surname",
@@ -151,17 +151,17 @@ STT_COLUMNS = {
     "other_surname":"other_surname",
     "other_number": "other_number",
     "other_country": "other_country",
-    "Prego, dica la città di provenienza della persona cercata": "other_city",
-    "Se lo desidera, può lasciare un messaggio aggiuntivo": "notes"
+    "Please, name the city of origin of the person": "other_city",
+    "If you wish, you can leave an additional message": "notes"
 }
 
-# Additional columns which is not directly related to stt results
+# Additional columns which are not directly related to STT results
 ADD_COLUMN = {}
 
 ADD_COLUMN["real_caller_number"] = CALLER_ID_NUMBER
 ADD_COLUMN["unique_id"] = STT_DATA["linkedid"]
 
-# Create one audio file from all dialplan recognition results with save audio enabled
+# Create one audio file from all Dialplan recognition results, if the option save audio is enabled
 # and write it to the destination directory with random name (added to separate db column)
 def concatenate_audio_files():
     sound_files = [item["audio_file"] for item in STT_DATA["questions"] if item["audio_file"]]
@@ -195,7 +195,7 @@ def get_error():
 # Calculate error column(s)
 ADD_COLUMN["error"] = get_error()
 
-# Process result of dialplan choice, please see example dialplan
+# Process result of Dialplan choice, please see example Dialplan
 ADD_COLUMN["looking_for_other"] = True if "yes" in get_result("looking_for_other") else False
 
 def create_query():
